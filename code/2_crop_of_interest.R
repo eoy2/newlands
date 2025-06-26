@@ -1,8 +1,9 @@
 
 
-rm(list = ls())
-gc()
-file.remove(list.files(tempdir(), full.names = T))
+#rm(list = ls())
+#gc()
+#file.remove(list.files(tempdir(), full.names = T))
+
 # the second for loop aggregates all of the county data collected in the first
 # and is commodity specific. The result is a single file for the state of GA 
 #that records all hierarchicical transitions for a commodity of interest
@@ -20,8 +21,7 @@ getCOMvals <- function(meta, commodity){
           Code %in% c(2,232,238,239) ~ 'Cotton',
           Code %in% c(1,12,13,225,226,237,241) ~ 'Corn',
           Code %in% c(4,235,236) ~ 'Sorghum',
-          Code %in% c(5,26,239,240,241,254) ~ 'Soybeans',
-          Code %in% 37 ~ 'Hay'
+          Code %in% c(5,26,239,240,241,254) ~ 'Soybeans'
     ),
     commodity_name = dplyr::if_else(is.na(commodity_name),LandCover,commodity_name)
     ) |>
@@ -32,7 +32,7 @@ getCOMvals <- function(meta, commodity){
   #grassland is wrong -- need to rerun original script to include this
   com_vals
 }
-getCOItransitions <- function(metadata_file, commodity_of_interest, county_files_location){
+getCOItransitions <- function(metadata_file, commodity_of_interest, county_files_location, out_dir){
   
   meta <- 
     metadata_file |> 
@@ -93,14 +93,12 @@ getCOItransitions <- function(metadata_file, commodity_of_interest, county_files
   lagged |> 
     saveRDS(
       paste0(
-        '/Users/eyackulic/workspace/fields_2_forests/',
+        out_dir,
         commodity_of_interest,
         '_raster_vals_v3.rds'
       )
     )    
   
-  
-  library(ggplot2)
   
   ggplot(
     data = lagged |> dplyr::filter(written_code %in% c(
@@ -117,13 +115,23 @@ getCOItransitions <- function(metadata_file, commodity_of_interest, county_files
   
 }
 
-meta <- 
-  '/Users/eyackulic/workspace/fields_2_forests/cropscape_metadata.csv' 
+library(tidyverse)
 
-file_locations <- '/Users/eyackulic/workspace/fields_2_forests/georgia_county_cropscape_gt15acres'
+
+meta <- 
+  '/Users/eyackulic/Documents/GitHub/AFF/newlands/data/cropscape_metadata.csv' 
+
+file_locations <- '/Users/eyackulic/workspace/Miss_CDLs/agricultural_pixels/'
+
+out_dir <- '/Users/eyackulic/workspace/Miss_CDLs/commodities'
+dir.create(path = out_dir)
+
+commodity <- 'sorghum'
 
 getCOItransitions(
   metadata_file = meta, 
-  commodity_of_interest = 'hay', 
-  county_files_location = file_locations
+  commodity_of_interest = commodity, 
+  county_files_location = file_locations,
+  out_dir = out_dir
 )
+cv f 

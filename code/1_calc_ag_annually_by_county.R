@@ -1,28 +1,9 @@
 
-metadata_file <- 
-  '/Users/eyackulic/workspace/fields_2_forests/cropscape_metadata.csv' 
-
-raster_paths <- 
-  '/Users/eyackulic/Downloads/2008_2024_CDLs' |> 
-  list.files(pattern = '.tif$', full.names = T) 
-
-raster_years <- as.numeric(stringr::str_sub(raster_paths, 43,46))
-raster_paths <- raster_paths[raster_years >2013 & raster_years < 2024]
-
-counties <-
-  '/Users/eyackulic/Downloads/tl_2024_us_county/tl_2024_us_county.shp' |>
-  sf::read_sf() |> 
-  dplyr::filter(STATEFP %in% 13) |> 
-  terra::vect() |>
-  terra::project(
-    terra::crs(terra::rast(raster_paths[1]))
-  )
-
 #this first loop will process rasters annually, by county, to determine all pixels that are 
 #designated as agricultural at least once during the time of interest. It keeps a record of the location of those 
 #pixels, so that the second loop can collect and store the full time series for every single pixel in the state of 
 #georgia that is agricultural at one time or another.
-get_ag_pixels <- function(state_counties, cdl_raster_paths, metadata_file){
+get_ag_pixels <- function(state_counties, cdl_raster_paths, metadata_file, out_dir){
 
   meta <-   
   metadata_file |> 
@@ -142,9 +123,48 @@ for(k in 1:length(state_counties)){
   go_long$county <- county$COUNTYFP
   write.csv(
     go_long,
-    paste0('/Users/eyackulic/workspace/fields_2_forests/georgia_county_cropscape_gt15acres/file_',county$COUNTYFP, '.csv'))
+    paste0(out_dir,
+           county$COUNTYFP, '.csv'))
   #if(k == 1){out_log <- lagged}else{out_log <- dplyr::bind_rows(out_log, lagged)}
   print(paste0(round(100 * k/length(state_counties$COUNTYFP), digits = 2), '% of counties finished!'))
 }
 
 }
+
+
+
+metadata_file <- 
+  '/Users/eyackulic/Documents/GitHub/AFF/newlands/data/cropscape_metadata.csv' 
+
+raster_paths <- 
+  '/Users/eyackulic/workspace/Miss_CDLs' |> #change path here
+  list.files(pattern = '.tif$', full.names = T) 
+
+match <- stringr::str_locate_all(pattern = '/', raster_paths[1]) |> data.frame()
+start <- match[nrow(match),1]
+raster_years <- 
+  as.numeric(
+    stringr::str_sub(
+      raster_paths, start + 1,start + 4)
+  )
+raster_paths <- raster_paths[raster_years >2013 & raster_years < 2024]
+
+counties <-
+  '/Users/eyackulic/Documents/GitHub/AFF/newlands/data/tl_2024_us_county.gpkg' |>
+  sf::read_sf() |> 
+  dplyr::filter(STATEFP %in% 28) |> #Georgia = 13 / Miss = 28
+  terra::vect() |>
+  terra::project(
+    terra::crs(terra::rast(raster_paths[1]))
+  )
+
+output_directory = '/Users/eyackulic/workspace/Miss_CDLs/agricultural_pixels/'
+
+get_ag_pixels(
+  state_counties = counties,
+  cdl_raster_paths = raster_paths,
+  metadata_file = metadata_file,
+  out_dir = output_directory
+    )
+
+#started @ 3:36-9:15
