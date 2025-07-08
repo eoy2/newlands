@@ -1,21 +1,30 @@
+require(tidycensus)
 
-files <-
+cropCDLS <- function(input_cdls_location,states_path, state_of_interest,output_location) {
+
+  files <-
   list.files(
-    '/Users/eyackulic/Downloads/cdls/', 
+    input_cdls_location, 
     pattern = '.tif',
     full.names = T)
-filenames <-
+
+  filenames <-
   list.files(
-    '/Users/eyackulic/Downloads/cdls/', 
+    input_cdls_location, 
     pattern = '.tif',
     full.names = F)
 
+fips_codes <- 
+  tidycensus::fips_codes |>
+  dplyr::select(state_code, state_name) |> 
+  dplyr::mutate(state_name = toupper(state_name)) |>
+  dplyr::distinct() |> 
+  dplyr::filter(state_name %in% toupper(state_of_interest))
+
 state <- 
-  '/Users/eyackulic/Documents/GitHub/AFF/newlands/data/tl_2024_us_county.gpkg' |>
-#  '/Users/eyackulic/Downloads/tl_2023_us_state/tl_2023_us_state.shp' |>
+  states_path |>
   sf::read_sf() |>
- # dplyr::filter(STUSPS %in% 'MS') |>
-  dplyr::filter(STATEFP %in% 28) |>
+  dplyr::filter(STATEFP %in% fips_codes$state_code) |> 
   terra::vect() |>
   terra::project(terra::crs(terra::rast(files[1])))
 
@@ -34,9 +43,23 @@ for(i in 1:length(files)){
     x = out,
     filename = 
       paste0(
-        '/Users/eyackulic/workspace/Miss_CDLs/',
+        output_location,
         filenames[i]
-      )
+      ),
+    overwrite = T,
+    datatype = 'INT1U'
   )
   
 }
+}
+
+
+input_cdls_location <- '/Users/eyackulic/Downloads/cdls/'
+states_path <- '/Users/eyackulic/Documents/GitHub/AFF/newlands/data/tl_2024_us_county.gpkg' 
+output_location <- '/Users/eyackulic/workspace/Miss_CDLs/'
+
+cropCDLS(
+  input_cdls_location = input_cdls_location,
+  states_path = states_path,
+  output_location = output_location,
+  state_of_interest = 'new jersey')
