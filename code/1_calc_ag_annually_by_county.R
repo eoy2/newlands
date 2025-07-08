@@ -90,8 +90,11 @@ for(k in 1:length(state_counties)){
     data.frame() |>
     dplyr::slice(out$Code)  
   
+  locs <- stringr::str_locate_all(cdl_raster_paths,'/')[[1]]
+  last_loc <- locs[nrow(locs),1]
+  
   colnames(all_values) <- 
-    paste0('n',stringr::str_sub(cdl_raster_paths, 43,46))
+    paste0('n',stringr::str_sub(cdl_raster_paths, last_loc + 1,last_loc + 4))
   
   all_values$locs <- out$Code
   fallow <- meta |> dplyr::filter(Group %in% 'Fallow')
@@ -152,7 +155,7 @@ raster_paths <- raster_paths[raster_years >2013 & raster_years < 2024]
 counties <-
   '/Users/eyackulic/Documents/GitHub/AFF/newlands/data/tl_2024_us_county.gpkg' |>
   sf::read_sf() |> 
-  dplyr::filter(STATEFP %in% 28) |> #Georgia = 13 / Miss = 28
+  dplyr::filter(STATEFP %in% '28') |> #Georgia = 13 / Miss = 28
   terra::vect() |>
   terra::project(
     terra::crs(terra::rast(raster_paths[1]))

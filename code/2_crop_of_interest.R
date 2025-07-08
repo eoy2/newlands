@@ -134,4 +134,3 @@ getCOItransitions(
   county_files_location = file_locations,
   out_dir = out_dir
 )
-cv f 

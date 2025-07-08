@@ -1,3 +1,8 @@
+# commodity <- 'sorghum'
+# commodity <- 'soybeans'
+# years <- c(1990:2025)
+# yield_file <- '/Users/eyackulic/Downloads/GA_yield_data.csv'
+
 
 get_crop_yields <- function(yield_data, commodity, years){
 
@@ -69,7 +74,7 @@ get_crop_yields_old <- function(yield_data, commodity, years){
       Value = as.numeric(Value)
     ) 
   
-  yield_data$Value2 = (yield_data$Value/yield_data[which.min(yield_data$Year),]$Value) #* 100
+  yield_data$Value2 = (yield_data$Value/yield_data[which.min(yield_data$Year),]$Value) * 100
   yield_data
 }
 
@@ -82,10 +87,9 @@ get_crop_yields_old <- function(yield_data, commodity, years){
 calculate_deltaIN <- function(yield_data, variable){
   mod_df <-
     yield_data |>
-    dplyr::rename(variable_choice = dplyr::all_of(variable)) 
+    dplyr::rename(variable_choice = variable) 
   
   mod <- lm( variable_choice ~ Year, mod_df)
-  mod_df$prediction <- predict(mod,newdata = mod_df)
   
   mod$coefficients[2] |> as.numeric()
   
@@ -108,9 +112,14 @@ calculate_deltaIN <- function(yield_data, variable){
   #   ylab('Soybeans (Bushels / Acre)')
   # ylab('Soybeans (% Relative to Year 1990)')
   #   ylab(data.item)
+
+}
   
-}
-firstup <- function(x) {
-  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  x
-}
+  
+    firstup <- function(x) {
+    substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+    x
+  }
+  
+  
+
