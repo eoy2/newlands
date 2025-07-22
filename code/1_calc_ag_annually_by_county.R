@@ -3,16 +3,34 @@
 #designated as agricultural at least once during the time of interest. It keeps a record of the location of those 
 #pixels, so that the second loop can collect and store the full time series for every single pixel in the state of 
 #georgia that is agricultural at one time or another.
-get_ag_pixels <- function(state_counties, cdl_raster_paths, metadata_file, out_dir){
+get_ag_pixels <- function(counties_path, state_of_interest, cdl_raster_paths, metadata_file, out_dir, mac){
 
+  fips_codes <- 
+    tidycensus::fips_codes |>
+    dplyr::select(state_code, state_name) |> 
+    dplyr::mutate(state_name = toupper(state_name)) |>
+    dplyr::distinct() |> 
+    dplyr::filter(state_name %in% toupper(state_of_interest))
+  
+  state_counties <-
+    counties_path|>
+    sf::read_sf() |>
+    dplyr::filter(STATEFP %in% fips_codes$state_code) |>
+    dplyr::arrange(COUNTYFP)
+  
   meta <-   
-  metadata_file |> 
-  readr::read_csv() |>
-  magrittr::set_colnames(c('Code', 'LandCover','Group')) |>
+    metadata_file |> 
+    readr::read_csv() |>
+    magrittr::set_colnames(c('Code', 'LandCover','Group')) |>
     dplyr::mutate(Group = dplyr::if_else(Code > 60 & Code < 63, 'Fallow', Group))
 
-for(k in 1:length(state_counties)){
-  county <- state_counties[k,]
+for(k in 1:length(state_counties$COUNTYFP)){
+  county <- 
+    state_counties[k,] |>
+    terra::vect() |>
+    terra::project(
+      terra::crs(terra::rast(cdl_raster_paths[1]))
+    )
   
   for(i in 1:length(cdl_raster_paths)){
     #working code starts here
@@ -90,7 +108,12 @@ for(k in 1:length(state_counties)){
     data.frame() |>
     dplyr::slice(out$Code)  
   
+  if(mac == T){
   locs <- stringr::str_locate_all(cdl_raster_paths,'/')[[1]]
+  }else{
+  locs <- stringr::str_locate_all(cdl_raster_paths,'\\\\')[[1]]
+  }
+  
   last_loc <- locs[nrow(locs),1]
   
   colnames(all_values) <- 
@@ -132,7 +155,7 @@ for(k in 1:length(state_counties)){
   print(paste0(round(100 * k/length(state_counties$COUNTYFP), digits = 2), '% of counties finished!'))
 }
 
-}
+ }
 
 
 
@@ -143,31 +166,37 @@ raster_paths <-
   '/Users/eyackulic/workspace/Miss_CDLs' |> #change path here
   list.files(pattern = '.tif$', full.names = T) 
 
-match <- stringr::str_locate_all(pattern = '/', raster_paths[1]) |> data.frame()
-start <- match[nrow(match),1]
 raster_years <- 
-  as.numeric(
-    stringr::str_sub(
-      raster_paths, start + 1,start + 4)
-  )
-raster_paths <- raster_paths[raster_years >2013 & raster_years < 2024]
+  unlist(
+    stringr::str_extract_all(
+      raster_paths, "(?<!\\d)\\d{4}" #find 4 digits in a row, extract as raster years
+      )
+    ) |>
+  as.numeric()
 
-counties <-
-  '/Users/eyackulic/Documents/GitHub/AFF/newlands/data/tl_2024_us_county.gpkg' |>
-  sf::read_sf() |> 
-  dplyr::filter(STATEFP %in% '28') |> #Georgia = 13 / Miss = 28
-  terra::vect() |>
-  terra::project(
-    terra::crs(terra::rast(raster_paths[1]))
-  )
 
-output_directory = '/Users/eyackulic/workspace/Miss_CDLs/agricultural_pixels/'
+
+state_of_interest = 'Mississippi'
+
+counties_path <- 
+  '/Users/eyackulic/Documents/GitHub/AFF/newlands/data/tl_2024_us_county.gpkg'  
+
+output_directory = '/Users/eyackulic/workspace/Miss_CDLs/retry/'
 
 get_ag_pixels(
-  state_counties = counties,
+  counties_path = counties_path,
+  state_of_interest = 'mississippi',
   cdl_raster_paths = raster_paths,
   metadata_file = metadata_file,
-  out_dir = output_directory
+  out_dir = output_directory,
+  mac = TRUE
     )
 
 #started @ 3:36-9:15
+#for troubleshooting
+counties_path = counties_path
+state_of_interest = 'mississippi'
+cdl_raster_paths = raster_paths
+metadata_file = metadata_file
+out_dir = output_directory
+mac = TRUE

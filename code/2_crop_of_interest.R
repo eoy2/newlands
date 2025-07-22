@@ -121,12 +121,12 @@ library(tidyverse)
 meta <- 
   '/Users/eyackulic/Documents/GitHub/AFF/newlands/data/cropscape_metadata.csv' 
 
-file_locations <- '/Users/eyackulic/workspace/Miss_CDLs/agricultural_pixels/'
+file_locations <- '/Users/eyackulic/workspace/Miss_CDLs/retry/'
 
-out_dir <- '/Users/eyackulic/workspace/Miss_CDLs/commodities'
+out_dir <- '/Users/eyackulic/workspace/Miss_CDLs/commodities/'
 dir.create(path = out_dir)
 
-commodity <- 'sorghum'
+commodity <- 'cotton'
 
 getCOItransitions(
   metadata_file = meta, 

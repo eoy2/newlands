@@ -62,4 +62,4 @@ cropCDLS(
   input_cdls_location = input_cdls_location,
   states_path = states_path,
   output_location = output_location,
-  state_of_interest = 'new jersey')
+  state_of_interest = 'mississippi')

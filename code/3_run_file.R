@@ -6,8 +6,10 @@ nassqs_auth('C1C3BFB2-6E23-3E72-A6F5-A60236695742')
 source("~/Documents/GitHub/AFF/newlands/intensification.R")
 source("~/Documents/GitHub/AFF/newlands/code/results_fxns.R")
 
-commodity <- 'sorghum'
-value_path <- paste0('/Users/eyackulic/workspace/fields_2_forests/', commodity, '_raster_vals_v3.rds') 
+commodity <- 'cotton'
+
+value_path <- paste0('/Users/eyackulic/workspace/Miss_CDLs/commodities/', commodity, '_raster_vals_v3.rds')
+#value_path <- paste0('/Users/eyackulic/workspace/fields_2_forests/', commodity, '_raster_vals_v3.rds') 
 
 out <- getResults(
   value_path = value_path, 
