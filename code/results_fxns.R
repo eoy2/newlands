@@ -1,5 +1,5 @@
 
-getResults <- function(value_path, t_prod = NA, commodity, option = 'remote', normalize = T){
+getResults <- function(value_path, t_prod = NA, commodity, option = 'remote', normalize = T, state_code){
   lagged <- value_path |> readRDS()
 #calculate area in acres for each hierarchical score, by year
 acres <-  
@@ -43,7 +43,7 @@ yields <-
     list(
       commodity_desc = toupper(commodity),
       agg_level_desc = "STATE",
-      state_alpha = "GA",
+      state_alpha = state_code,
       statisticcat_desc = "YIELD",
       reference_period_desc = 'YEAR'
         )
@@ -97,7 +97,7 @@ if(option == 'local'){
       list(
         commodity_desc = toupper(commodity),
         agg_level_desc = "STATE",
-        state_alpha = "GA",
+        state_alpha = state_code,
         statisticcat_desc = "AREA HARVESTED",
         reference_period_desc = 'YEAR',
         domain_desc = 'TOTAL',
