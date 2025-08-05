@@ -31,7 +31,7 @@ for(k in 1:length(state_counties$COUNTYFP)){
     terra::project(
       terra::crs(terra::rast(cdl_raster_paths[1]))
     )
-  
+  j <- 0
   for(i in 1:length(cdl_raster_paths)){
     #working code starts here
     rast <-
@@ -60,8 +60,8 @@ for(k in 1:length(state_counties$COUNTYFP)){
     #value within the raster of focal sums. This means that boundary pixels are not excluded
     #because the max value reflects the larger feature they are a part of. One weakness here is that 
     # a 15 acre area has to be within a 27 acre square (i.e., we might miss narrow tracts of land)
-    foc <- terra::focal(new_rast, w = matrix(1,nrow = 11, ncol = 11), fun = sum) 
-    max_foc <- terra::focal(foc, w = matrix(1,nrow = 11, ncol = 11), fun = max)
+    foc <- terra::focal(new_rast, w = matrix(1,nrow = 13, ncol = 13), fun = sum) 
+    max_foc <- terra::focal(foc, w = matrix(1,nrow = 13, ncol = 13), fun = max)
     
     foc_vals <- 
       max_foc |>
@@ -90,13 +90,29 @@ for(k in 1:length(state_counties$COUNTYFP)){
     if(nrow(crop_locations) > 0){
       crop_locations$Value <- 1
     }else{
+      out <- data.frame(matrix(nrow = 0,ncol = 2))
+      colnames(out) <- c('Code','Value')
+      
+      print(
+        paste0(
+          'no ag pixels in ',
+          cdl_raster_paths[i],
+          ' for ' ,
+          state_counties$NAME[k],
+          ' county'
+        )
+        )
       next
     }
-    if(i == 1){
+    if(j < 1){
+      j <- j + 1
       out <- crop_locations
     }else{
       out <- dplyr::bind_rows(crop_locations, out) |> dplyr::group_by(Code) |> dplyr::reframe(Value = sum(Value))  
     }
+  }
+  if(nrow(out) == 0){
+    next
   }
   
   all_values <-
@@ -162,8 +178,9 @@ for(k in 1:length(state_counties$COUNTYFP)){
 metadata_file <- 
   '/Users/eyackulic/Documents/GitHub/AFF/newlands/data/cropscape_metadata.csv' 
 
-raster_paths <- 
-  '/Users/eyackulic/workspace/Miss_CDLs' |> #change path here
+raster_paths <-
+  '/Users/eyackulic/Downloads/2008_2024_CDLs' |>
+#  '/Users/eyackulic/workspace/Miss_CDLs' |> #change path here
   list.files(pattern = '.tif$', full.names = T) 
 
 raster_years <- 
@@ -185,7 +202,7 @@ output_directory = '/Users/eyackulic/workspace/Miss_CDLs/retry/'
 
 get_ag_pixels(
   counties_path = counties_path,
-  state_of_interest = 'mississippi',
+  state_of_interest = 'georgia',
   cdl_raster_paths = raster_paths,
   metadata_file = metadata_file,
   out_dir = output_directory,
@@ -195,7 +212,7 @@ get_ag_pixels(
 #started @ 3:36-9:15
 #for troubleshooting
 counties_path = counties_path
-state_of_interest = 'mississippi'
+state_of_interest = 'georgia'
 cdl_raster_paths = raster_paths
 metadata_file = metadata_file
 out_dir = output_directory
