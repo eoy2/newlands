@@ -164,16 +164,16 @@ p1 <-
     data = TP,
     aes(x = Year, y = 100 * NLi),color = 'black', fill = 'coral', stat = 'identity'
   ) + geom_hline(yintercept = 40) + theme_classic() +
-  geom_hline(
-    yintercept = 100 * mean(TP$NLi, na.rm = T), 
-    linetype = 'dashed')+
-  geom_text(
-    aes(
-      label = paste0('10 year NL : ',round(100 * mean(TP$NLi, na.rm = T), digits = 2),'%'),
-      x = 2016, y = 30)
-  )  + ylab('NL Estimate (%)')
-
-gridExtra::grid.arrange(p1,p2, ncol = 2)
+   geom_hline(
+     yintercept = 100 * mean(TP$NLi, na.rm = T), 
+     linetype = 'dashed')+
+   geom_text(
+     aes(
+       label = paste0('10 year NL : ',round(100 * mean(TP$NLi, na.rm = T), digits = 2),'%'),
+       x = 2016, y = 30)
+   )  + ylab('NL Estimate (%)')
+ 
+ gridExtra::grid.arrange(p1,p2, ncol = 2)
 TP
 }
 
@@ -184,57 +184,3 @@ TP
 
 #alternate approach to new lands
 
-test <-
-  TP |>
-  dplyr::mutate(total_yield = area * dplyr::lag(Yi)) 
-
-new <- 
-  test |>
-  dplyr::add_row(Year = max(TP$Year) + 1,
-                 deltaIN = unique(deltaIN))
-
-#cumulative intensification by year of next prediction
-mod_intens <- 1 + sum(new$deltaIN, na.rm = T)
-#if total yield is increasing over time, we should predict future yield for next year
-#if not, we can just use the mean total yield to inform our estimates
-mod <- lm(total_yield ~ Year,test)
-
-if(coefficients(summary(mod))[8] < 0.05){
-  prediction <- stats::predict(mod, new)
-  yield <- prediction[length(prediction)]
-}else{
-  yield <- test$total_yield[length(test$ESarea) -1]
-}
-
-mod <- lm(ESarea ~ Year,test)
-if(coefficients(summary(mod))[8] < 0.05){
-  prediction <- stats::predict(mod, new)
-  es_supply <- prediction[length(prediction)]
-}else{
-  es_supply <- test$ESarea[length(test$ESarea) -1]
-}
-
-mod <- lm(CSarea ~ Year,test)
-if(coefficients(summary(mod))[8] < 0.05){
-  prediction <- stats::predict(mod, new)
-  cs_supply <- prediction[length(prediction)]
-}else{
-  cs_supply <- test$CSarea[length(test$CSarea) -1]
-}
-
-mod <- lm(LCarea ~ Year,test)
-if(coefficients(summary(mod))[8] < 0.05){
-  prediction <- stats::predict(mod, new)
-  lc_supply <- prediction[length(prediction)]
-}else{
-  lc_supply <- test$LCarea[length(test$LCarea) -1]
-}
-
-remaining_supply <- yield - (cs_supply * mod_intens) - (es_supply * mod_intens)
-
-if(remaining_supply > 0){
-  remaining_supply - (lc_supply * mod_intens)
-  new_lands <- lc_supply / (lc_supply + cs_supply + es_supply)
-}else{
-  new_lands = 0
-}
