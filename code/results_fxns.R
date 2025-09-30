@@ -7,7 +7,8 @@ acres <-
   dplyr::group_by(written_code, year) |>
   dplyr::reframe(
     n = dplyr::n() * 0.2223945
-  )
+  ) |> 
+  dplyr::filter(!is.na(written_code))
 
 years <- 
   acres |> 
@@ -183,4 +184,5 @@ TP
 
 
 #alternate approach to new lands
+
 
