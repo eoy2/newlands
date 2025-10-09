@@ -12,6 +12,7 @@
 #list file locations for all counties
 getCOMvals <- function(meta, commodity){
 
+  if(class(commodity) == 'character'){
   com_vals <-
     meta |> 
     dplyr::mutate(
@@ -30,6 +31,26 @@ getCOMvals <- function(meta, commodity){
     dplyr::select(Code)
   
   colnames(com_vals) <- 'Code'
+  } else{
+    com_vals <-
+      meta |> 
+      dplyr::mutate(
+        new_code = Code,
+        new_code =
+          dplyr::case_when(
+            Code %in% c(2,232,238,239) ~ 2,
+            Code %in% c(1,12,13,225,226,237,241) ~ 1,
+            Code %in% c(4,235,236) ~ 4,
+            Code %in% c(5,26,239,240,241,254) ~ 5
+            #          Code %in% 62 ~ 'Grass'
+          ),
+        new_code = dplyr::if_else(is.na(new_code),Code,new_code)
+      ) |>
+      dplyr::filter(new_code %in% commodity) |>
+      dplyr::select(Code)
+    
+    colnames(com_vals) <- 'Code'
+  }
   
   if(nrow(com_vals) == 0){
     print('#############################################################################################')
@@ -149,7 +170,7 @@ file_locations <- '/Users/eyackulic/workspace/fields_2_forests/GA_retry'
 out_dir <- '/Users/eyackulic/workspace/fields_2_forests/commodities/'
 dir.create(path = out_dir)
 
-commodity <- 'Other Hay/Non Alfalf'
+commodity <- 1
 
 getCOItransitions(
   metadata_file = meta, 
