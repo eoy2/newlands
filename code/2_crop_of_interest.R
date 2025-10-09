@@ -22,6 +22,7 @@ getCOMvals <- function(meta, commodity){
           Code %in% c(1,12,13,225,226,237,241) ~ 'Corn',
           Code %in% c(4,235,236) ~ 'Sorghum',
           Code %in% c(5,26,239,240,241,254) ~ 'Soybeans'
+#          Code %in% 62 ~ 'Grass'
     ),
     commodity_name = dplyr::if_else(is.na(commodity_name),LandCover,commodity_name)
     ) |>
@@ -29,6 +30,28 @@ getCOMvals <- function(meta, commodity){
     dplyr::select(Code)
   
   colnames(com_vals) <- 'Code'
+  
+  if(nrow(com_vals) == 0){
+    print('#############################################################################################')
+    print('error, not in possible commodity codes. see list in new window for possible commodity codes :')
+    print('#############################################################################################')
+    meta |> 
+      dplyr::mutate(
+        commodity_name = LandCover,
+        commodity_name =
+          dplyr::case_when(
+            Code %in% c(2,232,238,239) ~ 'Cotton',
+            Code %in% c(1,12,13,225,226,237,241) ~ 'Corn',
+            Code %in% c(4,235,236) ~ 'Sorghum',
+            Code %in% c(5,26,239,240,241,254) ~ 'Soybeans'
+            #          Code %in% 62 ~ 'Grass'
+          ),
+        commodity_name = dplyr::if_else(is.na(commodity_name),LandCover,commodity_name)
+      ) |> 
+      dplyr::rename(Commodity = LandCover, Commodity_Generic = commodity_name) |>
+      view()
+    break
+  }
   #grassland is wrong -- need to rerun original script to include this
   com_vals
 }
@@ -121,12 +144,12 @@ library(tidyverse)
 meta <- 
   '/Users/eyackulic/Documents/GitHub/AFF/newlands/data/cropscape_metadata.csv' 
 
-file_locations <- '/Users/eyackulic/workspace/Miss_CDLs/retry/'
+file_locations <- '/Users/eyackulic/workspace/fields_2_forests/GA_retry'
 
-out_dir <- '/Users/eyackulic/workspace/Miss_CDLs/commodities/'
+out_dir <- '/Users/eyackulic/workspace/fields_2_forests/commodities/'
 dir.create(path = out_dir)
 
-commodity <- 'cotton'
+commodity <- 'Other Hay/Non Alfalf'
 
 getCOItransitions(
   metadata_file = meta, 
