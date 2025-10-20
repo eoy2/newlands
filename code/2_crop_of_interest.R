@@ -137,7 +137,11 @@ getCOItransitions <- function(metadata_file, commodity_of_interest, county_files
   check <- stringr::str_detect(commodity_of_interest, '/')
   
   if(check == TRUE){
-  commodity_of_interest <- stringr::str_replace(string = commodity_of_interest,pattern = '/',replacement = '_')  
+    commodity_of_interest <- stringr::str_replace(string = commodity_of_interest,pattern = '/',replacement = '_')  
+  }
+  
+  if(stringr::str_ends(string = out_dir,pattern = '/') == FALSE){
+    out_dir <- paste0(out_dir, '/')
   }
   
   lagged |> 
@@ -169,14 +173,14 @@ library(tidyverse)
 
 
 meta <- 
-  '/Users/eyackulic/Documents/GitHub/AFF/newlands/data/cropscape_metadata.csv' 
+  'C:/Users/NephtaliChavez/American Forest Foundation/FAMILY FOREST CARBON PROGRAM - Documents/Geospatial Library/FieldToForest/New Lands Analysis/Ethans NL Method/newlands-main/data/cropscape_metadata.csv' 
 
-file_locations <- '/Users/eyackulic/workspace/fields_2_forests/GA_retry'
+file_locations <- 'C:/Users/NephtaliChavez/American Forest Foundation/FAMILY FOREST CARBON PROGRAM - Documents/Geospatial Library/FieldToForest/New Lands Analysis/Ethans NL Method/georgia/R outputs/'
 
-out_dir <- '/Users/eyackulic/workspace/fields_2_forests/commodities/'
+out_dir <- 'C:/Users/NephtaliChavez/American Forest Foundation/FAMILY FOREST CARBON PROGRAM - Documents/Geospatial Library/FieldToForest/New Lands Analysis/Ethans NL Method/georgia/R outputs'
 dir.create(path = out_dir)
 
-commodity <- 'skittles'
+commodity <- 'Other Hay/Non Alfalf'
 
 getCOItransitions(
   metadata_file = meta, 

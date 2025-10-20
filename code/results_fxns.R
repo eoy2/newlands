@@ -1,5 +1,8 @@
 
 getResults <- function(value_path, t_prod = NA, commodity, option = 'remote', normalize = T, state_code){
+  if(commodity == 'Other Hay_Non Alfalf'){
+    commodity = 'hay'
+  }
   lagged <- value_path |> readRDS()
 #calculate area in acres for each hierarchical score, by year
 acres <-  
@@ -170,10 +173,17 @@ p1 <-
      linetype = 'dashed')+
    geom_text(
      aes(
-       label = paste0('10 year NL : ',round(100 * mean(TP$NLi, na.rm = T), digits = 2),'%'),
+       label = paste0(nrow(TP), ' year NL : ',round(100 * mean(TP$NLi, na.rm = T), digits = 2),'%'),
        x = 2016, y = 30)
    )  + ylab('NL Estimate (%)')
  
+out_path <- 
+  value_path |>
+  stringr::str_replace(pattern = '.rds', replacement = paste0('.csv'))
+
+out |>
+  write.csv(file = out_path)
+
  gridExtra::grid.arrange(p1,p2, ncol = 2)
 TP
 }
