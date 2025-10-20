@@ -134,6 +134,12 @@ getCOItransitions <- function(metadata_file, commodity_of_interest, county_files
     if(i == 1){lagged = outputs}else(lagged = dplyr::bind_rows(outputs,lagged))
   }
   
+  check <- stringr::str_detect(commodity_of_interest, '/')
+  
+  if(check == TRUE){
+  commodity_of_interest <- stringr::str_replace(string = commodity_of_interest,pattern = '/',replacement = '_')  
+  }
+  
   lagged |> 
     saveRDS(
       paste0(
@@ -170,7 +176,7 @@ file_locations <- '/Users/eyackulic/workspace/fields_2_forests/GA_retry'
 out_dir <- '/Users/eyackulic/workspace/fields_2_forests/commodities/'
 dir.create(path = out_dir)
 
-commodity <- 1
+commodity <- 'skittles'
 
 getCOItransitions(
   metadata_file = meta, 
