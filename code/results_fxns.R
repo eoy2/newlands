@@ -1,8 +1,7 @@
 
-getResults <- function(value_path, t_prod = NA, commodity, option = 'remote', normalize = T, state_code){
-  if(commodity == 'Other Hay_Non Alfalf'){
-    commodity = 'hay'
-  }
+
+getResults <- function(value_path, t_prod = NA, commodity, option = 'remote', normalize = T, state_code, image_path = NA, csv_path = NA){
+  
   lagged <- value_path |> readRDS()
 #calculate area in acres for each hierarchical score, by year
 acres <-  
@@ -10,8 +9,7 @@ acres <-
   dplyr::group_by(written_code, year) |>
   dplyr::reframe(
     n = dplyr::n() * 0.2223945
-  ) |> 
-  dplyr::filter(!is.na(written_code))
+  ) |> dplyr::filter(!is.na(written_code))
 
 years <- 
   acres |> 
@@ -22,6 +20,42 @@ years <-
     year = as.numeric(year)
   ) |>
   unlist()
+
+tab <- acres$written_code |> table()
+for(i in 1:length(tab)){
+  for(j in 2:length(tab)){
+    l = identical(as.numeric(tab[i]),as.numeric(tab[j]))
+    if(l == FALSE){
+      n <- c(as.numeric(tab[i]), as.numeric(tab[j]))
+      max <- which.max(n) 
+      min <- which.min(n)
+      all_years <-
+        acres |> 
+        dplyr::filter(written_code %in%
+                        c(names(tab[i]),names(tab[j]))[max]) |>
+        dplyr::select(year)
+      
+      missing_years <- 
+        acres |> 
+        dplyr::filter(written_code %in%
+                        c(names(tab[i]),names(tab[j]))[min])
+      completed <- 
+        cbind(
+          c(names(tab[i]),names(tab[j]))[min],
+          as.numeric(all_years[which(!all_years$year %in% missing_years$year),]$year),
+          0) |> data.frame()
+      names(completed) <- names(missing_years)  
+      completed$year <- as.numeric(completed$year)
+      completed$n <- as.numeric(completed$n)
+      acres <- acres |> 
+        dplyr::filter(!written_code %in%
+                        c(names(tab[i]),names(tab[j]))[min]) |>
+        dplyr::bind_rows(missing_years) |>
+        dplyr::bind_rows(completed)
+      tab <- acres$written_code |> table()
+    }
+  }
+}
 
 ESarea <- acres[acres$written_code == 'stable crop',]$n
 CSarea <- acres[acres$written_code == 'crop change',]$n
@@ -102,15 +136,20 @@ if(option == 'local'){
         commodity_desc = toupper(commodity),
         agg_level_desc = "STATE",
         state_alpha = state_code,
-        statisticcat_desc = "AREA HARVESTED",
+        statisticcat_desc = c("AREA HARVESTED",'AREA BEARING'),#this should control for fruit trees that are area bearing, not harvested
         reference_period_desc = 'YEAR',
         domain_desc = 'TOTAL',
         source_desc = 'SURVEY'
       )
     )
-  harv <-
-    harv |> 
-    dplyr::filter(grepl(short_desc, pattern = '- ACRES HARVESTED'))
+
+  patt <- names(which.max(table(harv$statisticcat_desc)))
+
+  #why is this even here?  
+  # harv <-
+  #   harv |> 
+  #   dplyr::filter(grepl(short_desc, pattern = patt))
+
 }else(print('need an option choice for data retrieval [remote or local]'))
 
 colnames(harv) <- toupper(colnames(harv))
@@ -145,6 +184,7 @@ max <- vector()
 for(i in 1:10){
   max[i] = round(max(harv$area), digits = -i)
 }
+
 z <- max(max)
 lim<- round(max(harv$Value/z,harv$area/z),digits = 1)
 lab <- paste0('Mean Percent Error : ', round(unique(harv$mape),digits = 2))
@@ -161,38 +201,109 @@ p2 <-
   ylim(0,lim)  +
   geom_text(aes(y = (5/6 * lim), x = (1/4 * lim), label = lab))
 
-
+yr10mean <- 
+  TP |>
+  dplyr::arrange(-Year) |>
+  dplyr::slice(1:10)
+  
 p1 <-
   ggplot() +
   geom_bar(
     data = TP,
     aes(x = Year, y = 100 * NLi),color = 'black', fill = 'coral', stat = 'identity'
   ) + geom_hline(yintercept = 40) + theme_classic() +
-   geom_hline(
-     yintercept = 100 * mean(TP$NLi, na.rm = T), 
-     linetype = 'dashed')+
-   geom_text(
-     aes(
-       label = paste0(nrow(TP), ' year NL : ',round(100 * mean(TP$NLi, na.rm = T), digits = 2),'%'),
-       x = 2016, y = 30)
-   )  + ylab('NL Estimate (%)')
- 
-out_path <- 
-  value_path |>
-  stringr::str_replace(pattern = '.rds', replacement = paste0('.csv'))
+  geom_hline(
+    yintercept = 100 * mean(yr10mean$NLi, na.rm = T), 
+    linetype = 'dashed')+
+  geom_text(
+    aes(
+      label = paste0(length(yr10mean$NLi),' year NL : ',round(100 * mean(yr10mean$NLi, na.rm = T), digits = 2),'%'),
+      x = 2016, y = 30)
+  )  + ylab('NL Estimate (%)')
 
-out |>
-  write.csv(file = out_path)
+if(is.na(csv_path)){
+csv_path <- 
+  value_path |> 
+    stringr::str_replace(pattern = '.rds', replacement = paste0('_',state,'.csv')) 
+}
 
- gridExtra::grid.arrange(p1,p2, ncol = 2)
+harv |>
+    write.csv(file = csv_path)
+
+if(is.na(image_path)){
+image_path <- 
+  csv_path |>
+  stringr::str_replace(pattern = 'csv', replacement = 'png')
+}
+
+t <- gridExtra::grid.arrange(p1,p2, ncol = 2)
+
+ggplot2::ggsave(plot = t,
+  image_path
+)
+
+t
 TP
 }
 
 
 
 
-
-
-#alternate approach to new lands
-
-
+# 
+# 
+# #alternate approach to new lands
+# 
+# test <-
+#   TP |>
+#   dplyr::mutate(total_yield = area * dplyr::lag(Yi)) 
+# 
+# new <- 
+#   test |>
+#   dplyr::add_row(Year = max(TP$Year) + 1,
+#                  deltaIN = unique(deltaIN))
+# 
+# #cumulative intensification by year of next prediction
+# mod_intens <- 1 + sum(new$deltaIN, na.rm = T)
+# #if total yield is increasing over time, we should predict future yield for next year
+# #if not, we can just use the mean total yield to inform our estimates
+# mod <- lm(total_yield ~ Year,test)
+# 
+# if(coefficients(summary(mod))[8] < 0.05){
+#   prediction <- stats::predict(mod, new)
+#   yield <- prediction[length(prediction)]
+# }else{
+#   yield <- test$total_yield[length(test$ESarea) -1]
+# }
+# 
+# mod <- lm(ESarea ~ Year,test)
+# if(coefficients(summary(mod))[8] < 0.05){
+#   prediction <- stats::predict(mod, new)
+#   es_supply <- prediction[length(prediction)]
+# }else{
+#   es_supply <- test$ESarea[length(test$ESarea) -1]
+# }
+# 
+# mod <- lm(CSarea ~ Year,test)
+# if(coefficients(summary(mod))[8] < 0.05){
+#   prediction <- stats::predict(mod, new)
+#   cs_supply <- prediction[length(prediction)]
+# }else{
+#   cs_supply <- test$CSarea[length(test$CSarea) -1]
+# }
+# 
+# mod <- lm(LCarea ~ Year,test)
+# if(coefficients(summary(mod))[8] < 0.05){
+#   prediction <- stats::predict(mod, new)
+#   lc_supply <- prediction[length(prediction)]
+# }else{
+#   lc_supply <- test$LCarea[length(test$LCarea) -1]
+# }
+# 
+# remaining_supply <- yield - (cs_supply * mod_intens) - (es_supply * mod_intens)
+# 
+# if(remaining_supply > 0){
+#   remaining_supply - (lc_supply * mod_intens)
+#   new_lands <- lc_supply / (lc_supply + cs_supply + es_supply)
+# }else{
+#   new_lands = 0
+# }
