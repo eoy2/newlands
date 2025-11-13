@@ -67,21 +67,27 @@ areas <-
 
 years <- c(dplyr::first(years) - 1, years)
 
+if(toupper(commodity) %in% c(toupper("other hay/non alfalf"), toupper('alfalfa'))){
+  n_commodity = 'hay'
+}else{
+  n_commodity = commodity
+}
+
 if(option == 'local'){
 yields <- 
   t_prod|> 
   dplyr::filter(
     STATISTICCAT_DESC %in% 'YIELD',
     REFERENCE_PERIOD_DESC %in%  'YEAR',
-    COMMODITY_DESC %in% toupper(commodity)
+    COMMODITY_DESC %in% toupper(n_commodity)
     )
 }else if(option == 'remote'){
 yields <- 
   nassqs(
     list(
-      commodity_desc = toupper(commodity),
+  #    commodity_desc = toupper(n_commodity),
       agg_level_desc = "STATE",
-      state_alpha = state_code,
+      state_alpha = c('MN'),
       statisticcat_desc = "YIELD",
       reference_period_desc = 'YEAR'
         )
@@ -91,12 +97,21 @@ yields <-
 
 colnames(yields) <- toupper(colnames(yields))
 
+if(toupper(commodity) %in% toupper("other hay/non alfalf")){
+  yields <-
+    yields |>
+    dplyr::filter(CLASS_DESC %in% '(EXCL ALFALFA)')
+}else if(toupper(commodity) %in% toupper("alfalfa")){
+  yields <-
+    yields |>
+    dplyr::filter(CLASS_DESC %in% 'ALFALFA')
+}
 yields_short_desc <- names(which(table(yields$SHORT_DESC) == max(table(yields$SHORT_DESC))))
 
 yields <- 
   yields |> dplyr::filter(SHORT_DESC %in% yields_short_desc)
 
-Yi <- get_crop_yields(yield_data = yields, years = years, commodity) |> dplyr::arrange(Year)
+Yi <- get_crop_yields(yield_data = yields, years = years, commodity = n_commodity) |> dplyr::arrange(Year)
 
 if(normalize == TRUE){
   Yi$Value <- Yi$Value2
@@ -124,7 +139,7 @@ if(option == 'local'){
   harv <- 
     t_prod |> 
     dplyr::filter(STATISTICCAT_DESC %in% 'AREA HARVESTED',
-                  COMMODITY_DESC %in% toupper(commodity), 
+                  COMMODITY_DESC %in% toupper(n_commodity), 
                   grepl(SHORT_DESC, pattern = '- ACRES HARVESTED'), 
                   DOMAIN_DESC %in% 'TOTAL',
                   SOURCE_DESC %in% 'SURVEY', REFERENCE_PERIOD_DESC %in%  'YEAR') 
@@ -133,7 +148,7 @@ if(option == 'local'){
   harv <- 
     nassqs(
       list(
-        commodity_desc = toupper(commodity),
+        commodity_desc = toupper(n_commodity),
         agg_level_desc = "STATE",
         state_alpha = state_code,
         statisticcat_desc = c("AREA HARVESTED",'AREA BEARING'),#this should control for fruit trees that are area bearing, not harvested

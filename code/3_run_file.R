@@ -6,9 +6,10 @@ nassqs_auth('C1C3BFB2-6E23-3E72-A6F5-A60236695742')
 source("~/Documents/GitHub/AFF/newlands/intensification.R")
 source("~/Documents/GitHub/AFF/newlands/results_fxns.R")
 
-commodity <- 'peaches'
+commodity <- 'other hay/non alfalf'
 state <- 'GA'
 value_path <- paste0('/Users/eyackulic/workspace/fields_2_forests/commodities/', commodity, '_raster_vals_v3.rds') 
+value_path <- '/Users/eyackulic/workspace/fields_2_forests/commodities/other hay_non alfalf_raster_vals_v3.rds'
 
 out <- getResults(
   value_path = value_path, 
