@@ -239,7 +239,7 @@ p1 <-
 if(is.na(csv_path)){
 csv_path <- 
   value_path |> 
-    stringr::str_replace(pattern = '.rds', replacement = paste0('_',state,'.csv')) 
+    stringr::str_replace(pattern = '.rds', replacement = paste0('_',state_code,'.csv')) 
 }
 
 harv |>
