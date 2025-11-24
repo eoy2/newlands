@@ -85,9 +85,9 @@ yields <-
 yields <- 
   nassqs(
     list(
-  #    commodity_desc = toupper(n_commodity),
+      commodity_desc = toupper(n_commodity),
       agg_level_desc = "STATE",
-      state_alpha = c('MN'),
+      state_alpha = state_code,
       statisticcat_desc = "YIELD",
       reference_period_desc = 'YEAR'
         )
@@ -248,7 +248,7 @@ harv |>
 if(is.na(image_path)){
 image_path <- 
   csv_path |>
-  stringr::str_replace(pattern = 'csv', replacement = 'png')
+  stringr::str_replace(pattern = '.csv', replacement = '.png')
 }
 
 t <- gridExtra::grid.arrange(p1,p2, ncol = 2)
@@ -257,11 +257,18 @@ ggplot2::ggsave(plot = t,
   image_path
 )
 
-t
 TP
 }
 
 
+NL_average <-function(file_path, n_of_years){
+ 
+   file_path |> 
+   read.csv() |>
+    dplyr::arrange(dplyr::desc(Year)) |> #order from most recent to oldest
+    dplyr::slice(c(1:n_of_years)) |> #slice the number of years you want
+    dplyr::summarise(mean(NLi)) #take the mean NLi
+ }
 
 
 # 

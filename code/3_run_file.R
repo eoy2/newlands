@@ -1,15 +1,16 @@
 
 library(ggplot2)
 library(rnassqs)
-nassqs_auth('C1C3BFB2-6E23-3E72-A6F5-A60236695742')
+nassqs_auth('E87292B8-EBF0-3745-A964-479207E3CF4D')
 
-source("~/Documents/GitHub/AFF/newlands/intensification.R")
-source("~/Documents/GitHub/AFF/newlands/results_fxns.R")
+source("C:/Users/NephtaliChavez/American Forest Foundation/FAMILY FOREST CARBON PROGRAM - Documents/Geospatial Library/FieldToForest/New Lands Analysis/Ethans NL Method/newlands-main/code/intensification.R")
+source("C:/Users/NephtaliChavez/American Forest Foundation/FAMILY FOREST CARBON PROGRAM - Documents/Geospatial Library/FieldToForest/New Lands Analysis/Ethans NL Method/newlands-main/code/results_fxns.R")
 
-commodity <- 'other hay/non alfalf'
+commodity <- 'peaches'
 state <- 'GA'
-value_path <- paste0('/Users/eyackulic/workspace/fields_2_forests/commodities/', commodity, '_raster_vals_v3.rds') 
-value_path <- '/Users/eyackulic/workspace/fields_2_forests/commodities/other hay_non alfalf_raster_vals_v3.rds'
+value_path <- paste0('C:/Users/NephtaliChavez/American Forest Foundation/FAMILY FOREST CARBON PROGRAM - Documents/Geospatial Library/FieldToForest/New Lands Analysis/Ethans NL Method/georgia/georgia_commodities/', commodity, '_raster_vals_v3.rds')
+csv_path <- paste0('C:/Users/NephtaliChavez/American Forest Foundation/FAMILY FOREST CARBON PROGRAM - Documents/Geospatial Library/FieldToForest/New Lands Analysis/Ethans NL Method/georgia/NL Values/',commodity,'_vals.csv')
+#value_path <- '/Users/eyackulic/workspace/fields_2_forests/commodities/other hay_non alfalf_raster_vals_v3.rds'
 
 out <- getResults(
   value_path = value_path, 
@@ -19,8 +20,11 @@ out <- getResults(
   normalize = T,
   state_code = state,
   image_path = NA,
-  csv_path = NA)
+  csv_path = csv_path)
 
+
+
+NL_average(file_path = csv_path, n_of_years = 5)
 
 ggplot(out) + 
   geom_hline(aes(yintercept = mean(NLi, na.rm = T)), color = 'black', size = 2) + #revised equation for New Lands
