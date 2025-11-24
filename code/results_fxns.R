@@ -190,18 +190,18 @@ harv <-
   dplyr::mutate(
     error = abs(Value - area)/Value,
     n = dplyr::n(),
-    mape = sum(error) * (1/n)
+    mape = sum(error, na.rm = T) * (1/n)
   )
 
 
-zeros <- floor(log10(max(harv$area)))
+zeros <- floor(log10(max(harv$area, na.rm = T)))
 max <- vector()
 for(i in 1:10){
-  max[i] = round(max(harv$area), digits = -i)
+  max[i] = round(max(harv$area, na.rm = T), digits = -i)
 }
 
 z <- max(max)
-lim<- round(max(harv$Value/z,harv$area/z),digits = 1)
+lim<- round(max(harv$Value/z,harv$area/z, na.rm = T),digits = 1)
 lab <- paste0('Mean Percent Error : ', round(unique(harv$mape),digits = 2))
 
 p2 <-
@@ -329,3 +329,4 @@ NL_average <-function(file_path, n_of_years){
 # }else{
 #   new_lands = 0
 # }
+
