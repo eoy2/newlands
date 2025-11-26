@@ -1,6 +1,15 @@
 
 
 getResults <- function(value_path, t_prod = NA, commodity, option = 'remote', normalize = T, state_code, image_path = NA, csv_path = NA){
+  if(stringr::str_detect(string = value_path,pattern =  "other hay/non alfalf")){
+    n_commodity = 'hay'
+    value_path = stringr::str_replace(
+      string = value_path,
+      pattern = "other hay/non alfalf",
+      replacement = 'other hay_non alfalf')
+  }else{
+    n_commodity = commodity
+  }
   
   lagged <- value_path |> readRDS()
 #calculate area in acres for each hierarchical score, by year
@@ -66,12 +75,6 @@ areas <-
   magrittr::set_colnames(c('ESarea','CSarea','LCarea', 'Year'))
 
 years <- c(dplyr::first(years) - 1, years)
-
-if(toupper(commodity) %in% c(toupper("other hay/non alfalf"), toupper('alfalfa'))){
-  n_commodity = 'hay'
-}else{
-  n_commodity = commodity
-}
 
 if(option == 'local'){
 yields <- 
@@ -194,14 +197,14 @@ harv <-
   )
 
 
-zeros <- floor(log10(max(harv$area, na.rm = T)))
+zeros <- floor(log10(max(harv$area)))
 max <- vector()
 for(i in 1:10){
   max[i] = round(max(harv$area, na.rm = T), digits = -i)
 }
 
-z <- max(max)
-lim<- round(max(harv$Value/z,harv$area/z, na.rm = T),digits = 1)
+z <- max(max, na.rm = T)
+lim <- round(max(harv$Value/z,harv$area/z, na.rm = T),digits = 1)
 lab <- paste0('Mean Percent Error : ', round(unique(harv$mape),digits = 2))
 
 p2 <-
@@ -239,7 +242,7 @@ p1 <-
 if(is.na(csv_path)){
 csv_path <- 
   value_path |> 
-    stringr::str_replace(pattern = '.rds', replacement = paste0('_',state_code,'.csv')) 
+    stringr::str_replace(pattern = '.rds', replacement = paste0('_',state,'.csv')) 
 }
 
 harv |>
@@ -248,7 +251,7 @@ harv |>
 if(is.na(image_path)){
 image_path <- 
   csv_path |>
-  stringr::str_replace(pattern = '.csv', replacement = '.png')
+  stringr::str_replace(pattern = 'csv', replacement = 'png')
 }
 
 t <- gridExtra::grid.arrange(p1,p2, ncol = 2)
@@ -257,18 +260,11 @@ ggplot2::ggsave(plot = t,
   image_path
 )
 
+t
 TP
 }
 
 
-NL_average <-function(file_path, n_of_years){
- 
-   file_path |> 
-   read.csv() |>
-    dplyr::arrange(dplyr::desc(Year)) |> #order from most recent to oldest
-    dplyr::slice(c(1:n_of_years)) |> #slice the number of years you want
-    dplyr::summarise(mean(NLi)) #take the mean NLi
- }
 
 
 # 
@@ -329,4 +325,3 @@ NL_average <-function(file_path, n_of_years){
 # }else{
 #   new_lands = 0
 # }
-
