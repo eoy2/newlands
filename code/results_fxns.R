@@ -1,15 +1,28 @@
 
 
 getResults <- function(value_path, t_prod = NA, commodity, option = 'remote', normalize = T, state_code, image_path = NA, csv_path = NA){
-  if(stringr::str_detect(string = value_path,pattern =  "other hay/non alfalf")){
+  if(stringr::str_detect(string = tolower(value_path),pattern =  "other hay/non alfalf")){
     n_commodity = 'hay'
     value_path = stringr::str_replace(
       string = value_path,
       pattern = "other hay/non alfalf",
       replacement = 'other hay_non alfalf')
+  # }else if(stringr::str_detect(string = tolower(value_path),pattern =  "grassland/pasture")){
+  #   n_commodity = 'grass'
+  #   value_path = stringr::str_replace(
+  #     string = value_path,
+  #     pattern = "grassland/pasture",
+  #     replacement = 'grassland_pasture')
+  # }else if(stringr::str_detect(string = tolower(value_path),pattern =  "sod/sodgrass")){
+  #   n_commodity = 'grass'
+  #   value_path = stringr::str_replace(
+  #     string = value_path,
+  #     pattern = "sod/sodgrass",
+  #     replacement = 'sod_sodgrass')
   }else{
     n_commodity = commodity
   }
+  
   
   lagged <- value_path |> readRDS()
 #calculate area in acres for each hierarchical score, by year
@@ -266,7 +279,14 @@ TP
 
 
 
-
+NL_average <-function(file_path, n_of_years){
+  
+  file_path |> 
+    read.csv() |>
+    dplyr::arrange(dplyr::desc(Year)) |> #order from most recent to oldest
+    dplyr::slice(c(1:n_of_years)) |> #slice the number of years you want
+    dplyr::summarise(mean(NLi)) #take the mean NLi
+}
 # 
 # 
 # #alternate approach to new lands
